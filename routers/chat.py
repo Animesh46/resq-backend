@@ -1,10 +1,11 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from google import genai
+import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 import logging
 
+genai.configure(api_key=os.getenv("AIzaSyBjuQTDPhOVN7MTYzbIzHVpPkveBKNjg34"))
 load_dotenv()
 logger = logging.getLogger(__name__)
 
