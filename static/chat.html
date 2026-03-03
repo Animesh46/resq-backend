@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ResQ — Chat</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:20px}
+    #chat{max-width:720px}
+    #messages{list-style:none;padding:0}
+    #messages li{background:#f3f3f3;margin:6px 0;padding:8px;border-radius:4px}
+    input,button{padding:8px;margin:4px 0}
+  </style>
+</head>
+<body>
+  <h2>ResQ Chat</h2>
+  <div id="chat">
+    <div>
+      <label>Location</label><br>
+      <input id="location" placeholder="Location" value="Coastal Town" style="width:100%" />
+    </div>
+    <div>
+      <label>Disaster</label><br>
+      <input id="disaster" placeholder="Disaster" value="flood" style="width:100%" />
+    </div>
+    <div>
+      <label>Message</label><br>
+      <input id="message" placeholder="Describe your situation" style="width:100%" />
+    </div>
+    <div>
+      <button id="send">Send</button>
+    </div>
+    <h3>Responses</h3>
+    <ul id="messages"></ul>
+  </div>
+
+<script>
+const messages = document.getElementById('messages');
+const send = document.getElementById('send');
+
+function append(text){
+  const li = document.createElement('li');
+  li.textContent = text;
+  messages.prepend(li);
+}
+
+send.addEventListener('click', async ()=>{
+  const loc = document.getElementById('location').value;
+  const dis = document.getElementById('disaster').value;
+  const msg = document.getElementById('message').value;
+  append('You: ' + (msg || `[${dis} at ${loc}]`));
+  try{
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ location: loc, disaster: dis, message: msg })
+    });
+    if(!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    append('ResQ: ' + data.reply);
+  }catch(e){
+    append('Error: ' + e.message);
+  }
+});
+</script>
+</body>
+</html>

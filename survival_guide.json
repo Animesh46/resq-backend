@@ -1,0 +1,110 @@
+{
+  "FLOOD": {
+    "en": {
+      "LOW": ["Monitor water levels regularly", "Prepare emergency kit", "Know your evacuation route", "Secure valuable documents in waterproof bags", "Check on elderly neighbours"],
+      "MODERATE": ["Move valuables to higher floors", "Fill clean water containers now", "Disconnect electrical appliances", "Stay tuned to official alerts", "Prepare to evacuate within hours"],
+      "HIGH": ["Move to higher ground immediately", "Do not wade through floodwater", "Call 112 for evacuation", "Turn off electricity at mains", "Take emergency kit and documents"],
+      "CRITICAL": ["EVACUATE NOW — do not wait", "Call 112 immediately", "Move to nearest shelter", "Do not use lifts", "Signal for help from roof if trapped"]
+    },
+    "hi": {
+      "LOW": ["पानी के स्तर पर नज़र रखें", "आपातकालीन किट तैयार करें", "निकासी मार्ग जानें", "महत्वपूर्ण दस्तावेज़ सुरक्षित करें", "बुजुर्ग पड़ोसियों की जाँच करें"],
+      "MODERATE": ["कीमती सामान ऊपरी मंजिल पर ले जाएं", "साफ पानी भरें", "बिजली के उपकरण बंद करें", "आधिकारिक अलर्ट सुनते रहें", "घंटों में निकासी के लिए तैयार रहें"],
+      "HIGH": ["तुरंत ऊंची जगह पर जाएं", "बाढ़ के पानी में न चलें", "निकासी के लिए 112 पर कॉल करें", "मुख्य बिजली बंद करें", "आपातकालीन किट लेकर जाएं"],
+      "CRITICAL": ["अभी निकलें — प्रतीक्षा न करें", "तुरंत 112 पर कॉल करें", "निकटतम आश्रय स्थल जाएं", "लिफ्ट का उपयोग न करें", "फंसे होने पर छत से मदद के संकेत दें"]
+    },
+    "ta": {
+      "LOW": ["நீர் மட்டங்களை தொடர்ந்து கண்காணிக்கவும்", "அவசரகால கிட் தயார் செய்யவும்", "வெளியேற்ற பாதை தெரிந்து கொள்ளவும்", "முக்கிய ஆவணங்களை பாதுகாக்கவும்", "வயதான அண்டை வீட்டாரை சரிபார்க்கவும்"],
+      "MODERATE": ["மதிப்புமிக்க பொருட்களை மேல் தளத்திற்கு மாற்றவும்", "சுத்தமான தண்ணீர் நிரப்பவும்", "மின் சாதனங்களை அணைக்கவும்", "அதிகாரப்பூர்வ எச்சரிக்கைகளை கவனிக்கவும்", "வெளியேறத் தயாராக இருங்கள்"],
+      "HIGH": ["உடனே உயரமான இடத்திற்கு செல்லுங்கள்", "வெள்ள நீரில் நடக்காதீர்கள்", "வெளியேற்றத்திற்கு 112 அழைக்கவும்", "மின்சாரத்தை அணைக்கவும்", "அவசரகால கிட் எடுத்துச் செல்லுங்கள்"],
+      "CRITICAL": ["இப்போதே வெளியேறுங்கள்", "112 அழைக்கவும்", "அருகிலுள்ள தங்குமிடம் செல்லுங்கள்", "லிப்ட் பயன்படுத்தாதீர்கள்", "சிக்கியிருந்தால் உதவி கேளுங்கள்"]
+    },
+    "te": {
+      "LOW": ["నీటి స్థాయిలను పర్యవేక్షించండి", "అత్యవసర కిట్ సిద్ధం చేయండి", "తరలింపు మార్గం తెలుసుకోండి", "ముఖ్యమైన పత్రాలు భద్రపరచండి", "వృద్ధ పొరుగువారిని తనిఖీ చేయండి"],
+      "MODERATE": ["విలువైన వస్తువులు పై అంతస్తుకు తరలించండి", "స్వచ్ఛమైన నీళ్ళు నింపండి", "విద్యుత్ పరికరాలు ఆపండి", "అధికారిక హెచ్చరికలు వినండి", "తరలింపుకు సిద్ధంగా ఉండండి"],
+      "HIGH": ["వెంటనే ఎత్తైన ప్రదేశానికి వెళ్ళండి", "వరద నీటిలో నడవకండి", "తరలింపుకు 112 కి కాల్ చేయండి", "విద్యుత్ బంద్ చేయండి", "అత్యవసర కిట్ తీసుకెళ్ళండి"],
+      "CRITICAL": ["ఇప్పుడే బయలుదేరండి", "112 కి కాల్ చేయండి", "సమీప ఆశ్రయానికి వెళ్ళండి", "లిఫ్ట్ వాడకండి", "చిక్కుకుంటే పైకప్పు నుండి సహాయం అడగండి"]
+    },
+    "mr": {
+      "LOW": ["पाण्याच्या पातळीवर लक्ष ठेवा", "आपत्कालीन किट तयार ठेवा", "निर्वासन मार्ग माहीत असू द्या", "महत्त्वाची कागदपत्रे सुरक्षित ठेवा", "ज्येष्ठ शेजाऱ्यांची काळजी घ्या"],
+      "MODERATE": ["मौल्यवान वस्तू वरच्या मजल्यावर न्या", "स्वच्छ पाणी भरून ठेवा", "विद्युत उपकरणे बंद करा", "अधिकृत इशाऱ्यांकडे लक्ष द्या", "काही तासांत स्थलांतरित होण्यास तयार राहा"],
+      "HIGH": ["तात्काळ उंच ठिकाणी जा", "पुराच्या पाण्यात चालू नका", "स्थलांतरणासाठी 112 वर कॉल करा", "मुख्य वीज बंद करा", "आपत्कालीन किट घेऊन जा"],
+      "CRITICAL": ["आत्ताच निघा — थांबू नका", "तात्काळ 112 वर कॉल करा", "जवळच्या आश्रयस्थानी जा", "लिफ्ट वापरू नका", "अडकलेले असल्यास छतावरून मदत मागा"]
+    }
+  },
+  "CYCLONE": {
+    "en": {
+      "LOW": ["Monitor cyclone track on IMD website", "Secure loose outdoor items", "Identify nearest cyclone shelter", "Stock 3-day food and water supply", "Charge all devices and power banks"],
+      "MODERATE": ["Move to pucca building or cyclone shelter", "Tape window glass to prevent shattering", "Fill bathtubs with water for emergencies", "Stay away from coastal areas", "Listen to All India Radio for updates"],
+      "HIGH": ["Move to cyclone shelter NOW", "Stay away from windows and doors", "Do not go outside during the storm", "Keep emergency contacts accessible", "If outdoors, lie flat in a ditch"],
+      "CRITICAL": ["YOU ARE IN THE EYE WALL — SHELTER IMMEDIATELY", "Do not venture out during calm eye passage", "Stay in innermost room away from windows", "Hold onto a sturdy object", "Call 112 if trapped"]
+    },
+    "hi": {
+      "LOW": ["IMD वेबसाइट पर चक्रवात ट्रैक देखें", "बाहरी ढीली वस्तुएं सुरक्षित करें", "निकटतम चक्रवात आश्रय स्थान जानें", "3 दिन का खाना-पानी स्टॉक करें", "सभी उपकरण चार्ज करें"],
+      "MODERATE": ["पक्के भवन या चक्रवात आश्रय में जाएं", "खिड़कियों के कांच पर टेप लगाएं", "आपातकाल के लिए बाथटब में पानी भरें", "तटीय क्षेत्रों से दूर रहें", "अपडेट के लिए ऑल इंडिया रेडियो सुनें"],
+      "HIGH": ["अभी चक्रवात आश्रय जाएं", "खिड़कियों और दरवाजों से दूर रहें", "तूफान के दौरान बाहर न जाएं", "आपातकालीन संपर्क तैयार रखें", "बाहर हों तो खाई में लेट जाएं"],
+      "CRITICAL": ["आप आंख की दीवार में हैं — तुरंत आश्रय लें", "आंख के गुजरने पर शांत दिखने पर बाहर न जाएं", "खिड़कियों से दूर अंदरूनी कमरे में रहें", "किसी मजबूत वस्तु को पकड़ें", "फंसे हों तो 112 पर कॉल करें"]
+    }
+  },
+  "EARTHQUAKE": {
+    "en": {
+      "LOW": ["Secure heavy furniture to walls", "Keep an emergency kit ready", "Know your building's exit routes", "Identify open spaces near you", "Check for gas leaks periodically"],
+      "MODERATE": ["Drop, Cover, Hold On if shaking starts", "Move away from windows", "If outdoors, move away from buildings", "Do not use elevators", "Be prepared for aftershocks"],
+      "HIGH": ["DROP under sturdy table — COVER head — HOLD ON", "Stay away from exterior walls", "If in bed, cover head with pillow", "After shaking stops, evacuate carefully", "Watch for falling debris"],
+      "CRITICAL": ["DROP COVER HOLD ON NOW", "After shaking stops — evacuate immediately", "Expect aftershocks", "Do not re-enter damaged buildings", "Call 112 — report injuries"]
+    },
+    "hi": {
+      "LOW": ["भारी फर्नीचर दीवार से जोड़ें", "आपातकालीन किट तैयार रखें", "भवन के निकास मार्ग जानें", "नजदीकी खुली जगह पहचानें", "गैस रिसाव समय-समय पर जांचें"],
+      "HIGH": ["मजबूत मेज के नीचे झुकें - सिर ढकें - पकड़ें", "बाहरी दीवारों से दूर रहें", "बिस्तर पर हों तो तकिए से सिर ढकें", "कंपन रुकने के बाद सावधानी से निकलें", "गिरने वाले मलबे से सावधान रहें"],
+      "CRITICAL": ["अभी झुकें - ढकें - पकड़ें", "कंपन रुकने के बाद तुरंत निकलें", "आफ्टरशॉक की उम्मीद रखें", "क्षतिग्रस्त भवन में दोबारा न जाएं", "112 पर कॉल करें"]
+    }
+  },
+  "HEATWAVE": {
+    "en": {
+      "LOW": ["Stay hydrated — drink water every hour", "Avoid outdoor activities 11am–4pm", "Wear light, loose cotton clothing", "Use curtains/blinds to block sunlight", "Check on elderly and children"],
+      "MODERATE": ["Move to coolest room or AC area", "Wet towels on neck and wrists", "Avoid alcohol, caffeine, heavy meals", "ORS solution if sweating heavily", "Know signs of heat stroke: confusion, no sweating"],
+      "HIGH": ["Seek air-conditioned shelter immediately", "Do not go outside unless absolutely necessary", "Drink water every 20 minutes", "Watch for heat stroke symptoms", "Call 112 if someone collapses"],
+      "CRITICAL": ["HEAT EMERGENCY — go to hospital if feeling unwell", "Do not leave anyone in vehicles", "Wet and fan a person showing heat stroke signs", "Call 112 immediately", "Cool the person rapidly — ice, wet cloth"]
+    }
+  },
+  "WILDFIRE": {
+    "en": {
+      "LOW": ["Monitor fire location and wind direction", "Prepare to evacuate", "Identify evacuation routes away from fire", "Close all windows and doors", "Prepare N95 masks for smoke"],
+      "MODERATE": ["Begin evacuation if route is clear", "Seal gaps under doors with wet towels", "Fill sinks and tubs with water", "Remove flammable items from around home", "Leave early — don't wait for mandatory order"],
+      "HIGH": ["EVACUATE NOW if not already done", "Take only essential items", "Close all doors — slows fire spread", "Turn on all exterior lights", "Leave windows closed"],
+      "CRITICAL": ["EVACUATE IMMEDIATELY — YOUR LIFE IS AT RISK", "If trapped: call 112, signal with bright cloth", "If fire reaches you: get into a pool or ditch", "Do not shelter in car unless driving to safety", "Cover yourself with dirt if no water available"]
+    }
+  },
+  "LANDSLIDE": {
+    "en": {
+      "LOW": ["Monitor hillside areas for cracks or movement", "Stay away from steep slopes during heavy rain", "Know your evacuation route", "Prepare emergency kit", "Avoid cutting trees on slopes"],
+      "MODERATE": ["Move away from slopes and river banks", "Watch for muddy river water — sign of slide upstream", "Close all windows and doors", "Alert authorities of any cracks in hills", "Prepare to evacuate quickly"],
+      "HIGH": ["MOVE AWAY FROM SLOPES IMMEDIATELY", "Do not cross landslide zones", "Stay on roads away from slopes", "Call 112 to report blockages", "Listen for rumbling sounds"],
+      "CRITICAL": ["RUN PERPENDICULAR TO SLIDE PATH", "If buried: conserve air, tap on pipes to signal", "Call 112 from safe location", "Do not re-enter slide area", "Watch for secondary slides"]
+    }
+  },
+  "COLDWAVE": {
+    "en": {
+      "LOW": ["Wear multiple layers of warm clothing", "Check on elderly and homeless", "Ensure heating systems are working", "Keep emergency supplies at home", "Reduce time outdoors"],
+      "MODERATE": ["Stay indoors as much as possible", "Eat hot meals and warm drinks", "Watch for hypothermia signs: shivering, slurred speech", "Keep pets indoors", "Insulate pipes to prevent bursting"],
+      "HIGH": ["Do not go outdoors unless emergency", "If stuck outdoors — keep moving, do not sit on cold ground", "Call 112 for vulnerable persons who need shelter", "Avoid alcohol — it increases heat loss", "Use dry firewood only indoors"],
+      "CRITICAL": ["SEVERE COLD EMERGENCY", "Move to heated shelter immediately", "Call 112 if someone shows hypothermia signs", "For frostbite: do not rub — warm gently", "Emergency numbers: 112"]
+    }
+  },
+  "emergency_numbers": {
+    "national": {
+      "emergency": "112",
+      "ndma": "1078",
+      "ndrf": "011-24363260",
+      "ambulance": "108",
+      "fire": "101",
+      "police": "100"
+    },
+    "states": {
+      "Tamil Nadu": {"sdma": "044-28412900", "floods": "1800-425-1188"},
+      "Maharashtra": {"sdma": "022-22025050"},
+      "Odisha": {"sdma": "0674-2534177"},
+      "Andhra Pradesh": {"sdma": "0863-2340400"},
+      "Kerala": {"sdma": "0471-2364424"}
+    }
+  }
+}

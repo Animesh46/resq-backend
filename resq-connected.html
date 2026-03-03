@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResQ — Disaster Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #FF2233;
+    --orange: #FF6B00;
+    --yellow: #FFD100;
+    --green: #00E87A;
+    --bg: #0A0A0B;
+    --surface: #111114;
+    --surface2: #18181D;
+    --border: #252530;
+    --text: #F0F0F5;
+    --muted: #666680;
+    --critical: #FF2233;
+    --high: #FF6B00;
+    --moderate: #FFD100;
+    --low: #00E87A;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #060607;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ── API config banner ─────────────────────────── */
+  .config-banner {
+    width: 390px;
+    background: rgba(255,209,0,0.08);
+    border: 1px solid rgba(255,209,0,0.2);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 11px;
+    color: var(--yellow);
+    font-family: 'Space Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .config-banner input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--yellow);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+  }
+  .config-banner input::placeholder { color: rgba(255,209,0,0.4); }
+  .cfg-btn {
+    background: rgba(255,209,0,0.15);
+    border: 1px solid rgba(255,209,0,0.3);
+    color: var(--yellow);
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── PHONE SHELL ────────────────────────────────── */
+  .phone-shell {
+    width: 390px;
+    min-height: 844px;
+    background: var(--bg);
+    border-radius: 50px;
+    border: 1px solid #2a2a35;
+    box-shadow: 0 0 0 8px #111114, 0 0 0 9px #252530, 0 60px 120px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 28px 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .status-bar .time { font-weight: 700; color: var(--text); }
+  .conn-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .conn-dot.online { background: var(--green); }
+  .conn-dot.offline { background: var(--red); animation: pulse-dot 1s infinite; }
+
+  .app-header {
+    padding: 8px 24px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 3px; background: linear-gradient(135deg, #FF2233, #FF6B00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .logo span { font-size: 10px; font-family: 'Space Mono', monospace; -webkit-text-fill-color: var(--muted); letter-spacing: 1px; display: block; margin-top: -6px; }
+  .header-right { display: flex; gap: 12px; align-items: center; }
+  .lang-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .notif-btn { width: 36px; height: 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+  .notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--red); border-radius: 50%; border: 2px solid var(--bg); }
+
+  /* ── SCROLL AREA ────────────────────────────────── */
+  .scroll-area { overflow-y: auto; flex: 1; }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* ── UDRI CARD ──────────────────────────────────── */
+  .udri-card {
+    margin: 0 16px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .udri-card::before { content: ''; position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(255,34,51,0.15) 0%, transparent 70%); border-radius: 50%; }
+  @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(844px); } }
+  .udri-card::after { content: ''; position: absolute; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,34,51,0.3), transparent); animation: scan 4s linear infinite; pointer-events: none; }
+
+  .udri-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .udri-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+  .udri-location { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .loc-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .loc-dot.active { background: var(--green); animation: pulse-dot 1.5s infinite; }
+  .loc-dot.inactive { background: var(--muted); }
+  .udri-badge { font-family: 'Space Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 20px; letter-spacing: 1px; }
+  .udri-badge.CRITICAL { background: rgba(255,34,51,0.15); border: 1px solid rgba(255,34,51,0.3); color: var(--red); }
+  .udri-badge.HIGH { background: rgba(255,107,0,0.15); border: 1px solid rgba(255,107,0,0.3); color: var(--orange); }
+  .udri-badge.MODERATE { background: rgba(255,209,0,0.15); border: 1px solid rgba(255,209,0,0.3); color: var(--yellow); }
+  .udri-badge.LOW { background: rgba(0,232,122,0.15); border: 1px solid rgba(0,232,122,0.3); color: var(--green); }
+
+  .udri-gauge-container { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; }
+  .gauge-wrap { position: relative; width: 110px; height: 60px; flex-shrink: 0; }
+  .gauge-svg { width: 110px; height: 70px; overflow: visible; }
+  .gauge-track { fill: none; stroke: var(--border); stroke-width: 8; stroke-linecap: round; }
+  .gauge-fill { fill: none; stroke: url(#gaugeGrad); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 144.5; transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1); }
+  .gauge-value { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--text); line-height: 1; }
+  .udri-details { flex: 1; }
+  .udri-score-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 4px; }
+  .udri-desc { font-size: 13px; color: var(--text); font-weight: 500; margin-bottom: 8px; }
+  .udri-disasters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .dis-tag { font-size: 10px; font-family: 'Space Mono', monospace; padding: 3px 8px; border-radius: 4px; border: 1px solid; }
+  .dis-tag.FLOOD { color: #4488FF; border-color: rgba(68,136,255,0.3); background: rgba(68,136,255,0.08); }
+  .dis-tag.CYCLONE { color: #CC44FF; border-color: rgba(204,68,255,0.3); background: rgba(204,68,255,0.08); }
+  .dis-tag.HEATWAVE { color: var(--orange); border-color: rgba(255,107,0,0.3); background: rgba(255,107,0,0.08); }
+  .dis-tag.EARTHQUAKE { color: #FF8844; border-color: rgba(255,136,68,0.3); background: rgba(255,136,68,0.08); }
+  .dis-tag.WILDFIRE { color: #FF4400; border-color: rgba(255,68,0,0.3); background: rgba(255,68,0,0.08); }
+  .dis-tag.LANDSLIDE { color: #AA8844; border-color: rgba(170,136,68,0.3); background: rgba(170,136,68,0.08); }
+
+  .timeline-bar { background: var(--surface2); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+  .timeline-icon { width: 32px; height: 32px; background: rgba(255,34,51,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .timeline-text { flex: 1; }
+  .timeline-main { font-size: 13px; font-weight: 600; color: var(--text); }
+  .timeline-main span { color: var(--red); font-family: 'Space Mono', monospace; }
+  .timeline-sub { font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 1px; }
+
+  /* ── SECTION HEADERS ─────────────────────────────── */
+  .section-header { padding: 16px 24px 10px; display: flex; justify-content: space-between; align-items: center; }
+  .section-title { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .section-action { font-size: 12px; color: var(--red); cursor: pointer; }
+
+  /* ── ALERTS ──────────────────────────────────────── */
+  .alerts-scroll { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .alert-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.15s; }
+  .alert-card:active { transform: scale(0.98); }
+  .alert-card.CRITICAL { border-color: rgba(255,34,51,0.3); background: linear-gradient(135deg, rgba(255,34,51,0.04), transparent 60%), var(--surface); }
+  .alert-card.HIGH { border-color: rgba(255,107,0,0.3); background: linear-gradient(135deg, rgba(255,107,0,0.04), transparent 60%), var(--surface); }
+  .alert-card.MODERATE { border-color: rgba(255,209,0,0.2); background: linear-gradient(135deg, rgba(255,209,0,0.03), transparent 60%), var(--surface); }
+  .alert-icon-wrap { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .alert-icon-wrap.FLOOD { background: rgba(68,136,255,0.12); }
+  .alert-icon-wrap.CYCLONE { background: rgba(204,68,255,0.12); }
+  .alert-icon-wrap.EARTHQUAKE { background: rgba(255,136,68,0.12); }
+  .alert-icon-wrap.WILDFIRE { background: rgba(255,68,0,0.12); }
+  .alert-icon-wrap.HEATWAVE { background: rgba(255,107,0,0.12); }
+  .alert-icon-wrap.LANDSLIDE { background: rgba(170,136,68,0.12); }
+  .alert-body { flex: 1; min-width: 0; }
+  .alert-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .alert-type { font-size: 13px; font-weight: 600; color: var(--text); }
+  .alert-score { font-family: 'Bebas Neue', sans-serif; font-size: 20px; line-height: 1; }
+  .alert-score.CRITICAL, .alert-score.HIGH { color: var(--red); }
+  .alert-score.MODERATE { color: var(--yellow); }
+  .alert-score.LOW { color: var(--green); }
+  .alert-region { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .alert-meta { display: flex; gap: 8px; align-items: center; }
+  .verified-badge { font-size: 9px; font-family: 'Space Mono', monospace; padding: 2px 7px; border-radius: 3px; }
+  .verified-badge.VERIFIED { background: rgba(0,232,122,0.12); color: var(--green); }
+  .verified-badge.MONITORING { background: rgba(255,209,0,0.12); color: var(--yellow); }
+  .verified-badge.RUMOR { background: rgba(255,34,51,0.12); color: var(--red); }
+  .alert-time { font-size: 10px; color: var(--muted); font-family: 'Space Mono', monospace; }
+
+  /* ── RISK BREAKDOWN ──────────────────────────────── */
+  .risk-panel { margin: 0 16px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 18px; }
+  .risk-panel-title { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+  .risk-bars { display: flex; flex-direction: column; gap: 10px; }
+  .risk-row { display: flex; align-items: center; gap: 10px; }
+  .risk-row-label { font-size: 10px; color: var(--muted); width: 90px; flex-shrink: 0; font-family: 'Space Mono', monospace; }
+  .risk-bar-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .risk-bar-fill { height: 100%; border-radius: 2px; transition: width 1.5s cubic-bezier(0.4,0,0.2,1); }
+  .risk-row-val { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text); width: 24px; text-align: right; }
+
+  /* ── VERIFICATION STRIP ──────────────────────────── */
+  .verif-strip { margin: 0 16px 16px; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+  .verif-strip.VERIFIED { background: rgba(0,232,122,0.06); border: 1px solid rgba(0,232,122,0.15); }
+  .verif-strip.MONITORING { background: rgba(255,209,0,0.06); border: 1px solid rgba(255,209,0,0.15); }
+  .verif-strip.RUMOR { background: rgba(255,34,51,0.06); border: 1px solid rgba(255,34,51,0.15); }
+  .verif-text { flex: 1; font-size: 11px; }
+  .verif-strip.VERIFIED .verif-text { color: var(--green); }
+  .verif-strip.MONITORING .verif-text { color: var(--yellow); }
+  .verif-strip.RUMOR .verif-text { color: var(--red); }
+  .verif-score { font-family: 'Bebas Neue', sans-serif; font-size: 20px; }
+  .verif-strip.VERIFIED .verif-score { color: var(--green); }
+  .verif-strip.MONITORING .verif-score { color: var(--yellow); }
+  .verif-strip.RUMOR .verif-score { color: var(--red); }
+
+  /* ── QUICK ACTIONS ───────────────────────────────── */
+  .quick-actions { padding: 0 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .qa-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px; cursor: pointer; transition: all 0.15s; text-align: left; }
+  .qa-btn:hover { border-color: rgba(255,34,51,0.3); }
+  .qa-icon { font-size: 22px; margin-bottom: 8px; }
+  .qa-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .qa-sub { font-size: 10px; color: var(--muted); }
+
+  /* ── ACTION MODAL ────────────────────────────────── */
+  .action-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 500;
+    backdrop-filter: blur(4px);
+  }
+  .action-modal.open { display: flex; }
+  .action-sheet {
+    width: 390px;
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    padding: 24px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  .steps-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .step-item { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; }
+  .step-num { width: 22px; height: 22px; background: rgba(255,34,51,0.15); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--red); flex-shrink: 0; }
+  .step-text { font-size: 13px; color: var(--text); padding-top: 3px; }
+  .close-modal { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 12px; border-radius: 12px; cursor: pointer; font-size: 13px; }
+
+  /* ── SAFETY LOOP MODAL ───────────────────────────── */
+  .safety-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 600;
+  }
+  .safety-overlay.open { display: flex; }
+  .safety-card {
+    width: 340px;
+    background: var(--surface);
+    border: 1px solid rgba(255,34,51,0.3);
+    border-radius: 24px;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .safety-icon { font-size: 48px; margin-bottom: 16px; }
+  .safety-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; margin-bottom: 8px; }
+  .safety-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .safety-countdown { font-family: 'Space Mono', monospace; font-size: 36px; color: var(--red); margin-bottom: 24px; }
+  .safety-yes { width: 100%; background: var(--green); border: none; color: #000; font-weight: 700; padding: 16px; border-radius: 16px; cursor: pointer; font-size: 15px; margin-bottom: 10px; }
+  .safety-no { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 14px; border-radius: 16px; cursor: pointer; font-size: 13px; }
+
+  /* ── ONBOARDING OVERLAY ───────────────────────────── */
+  .onboard-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 650;
+  }
+  .onboard-overlay.open { display: flex; }
+  .onboard-card {
+    width: 340px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 28px 24px 24px;
+  }
+  .onboard-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    margin-bottom: 6px;
+  }
+  .onboard-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .onboard-field {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .onboard-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+  .onboard-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .onboard-input::placeholder {
+    color: rgba(255,255,255,0.3);
+  }
+  .onboard-btn {
+    width: 100%;
+    margin-top: 6px;
+    background: linear-gradient(135deg, #FF2233 0%, #FF6B00 100%);
+    border: none;
+    border-radius: 14px;
+    padding: 12px;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .onboard-note {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── DISTRESS BUTTON ─────────────────────────────── */
+  .distress-section { padding: 0 16px 32px; }
+  .distress-btn { width: 100%; background: linear-gradient(135deg, #FF2233 0%, #CC0011 100%); border: none; border-radius: 20px; padding: 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; transition: transform 0.1s; box-shadow: 0 8px 32px rgba(255,34,51,0.3); }
+  .distress-btn::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px); }
+  .distress-btn:active { transform: scale(0.98); }
+  .distress-left { display: flex; align-items: center; gap: 14px; }
+  .distress-sos { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 3px; color: white; }
+  .distress-text .dt { font-size: 14px; font-weight: 700; color: white; }
+  .distress-text .ds { font-size: 11px; color: rgba(255,255,255,0.6); }
+  .distress-pulse { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; animation: pulse-glow 1.5s infinite; }
+  @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.3); } 50% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } }
+  @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } }
+
+  /* ── BOTTOM NAV ──────────────────────────────────── */
+  .bottom-nav { background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 0 24px; flex-shrink: 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 4px 16px; }
+  .nav-icon { font-size: 20px; }
+  .nav-label { font-size: 9px; font-family: 'Space Mono', monospace; color: var(--muted); letter-spacing: 0.5px; }
+  .nav-item.active .nav-label { color: var(--red); }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 6px rgba(255,34,51,0.5)); }
+
+  /* ── LOADING SKELETON ────────────────────────────── */
+  .skeleton { background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ── TOAST ───────────────────────────────────────── */
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); padding: 10px 18px; border-radius: 20px; font-size: 12px; z-index: 999; font-family: 'Space Mono', monospace; display: none; }
+  .toast.show { display: block; animation: toastIn 0.3s ease; }
+  @keyframes toastIn { from { opacity: 0; top: 0; } to { opacity: 1; top: 20px; } }
+
+  .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 4px; color: #333340; margin-bottom: 0; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<p class="page-title">ResQ · Connected UI</p>
+
+<!-- API Config Banner -->
+<div class="config-banner">
+  ⚙ API:
+  <input type="text" id="apiBase" value="http://localhost:8000" placeholder="http://localhost:8000">
+  <button class="cfg-btn" onclick="loadData()">Connect</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Onboarding Overlay -->
+<div class="onboard-overlay" id="onboardOverlay">
+  <div class="onboard-card">
+    <div class="onboard-title">Welcome to ResQ</div>
+    <div class="onboard-sub">We’ll use your details to alert your emergency contact with your GPS location during disasters.</div>
+    <div class="onboard-field">
+      <label class="onboard-label" for="on_name">Your Name</label>
+      <input class="onboard-input" id="on_name" type="text" placeholder="Full name">
+    </div>
+    <div class="onboard-field">
+      <label class="onboard-label" for="on_phone">Your Phone Number</label>
+      <input class="onboard-input" id="on_phone" type="tel" placeholder="+91-XXXXXXXXXX">
+    </div>
+    <div class="onboard-field">
+      <label class="onboard-label" for="on_em_phone">Emergency Contact Phone</label>
+      <input class="onboard-input" id="on_em_phone" type="tel" placeholder="+91-XXXXXXXXXX">
+    </div>
+    <div class="onboard-field">
+      <label class="onboard-label" for="on_em_email">Emergency Contact Email (optional)</label>
+      <input class="onboard-input" id="on_em_email" type="email" placeholder="name@example.com">
+    </div>
+    <button class="onboard-btn" onclick="submitOnboarding()">Save & Continue</button>
+    <div class="onboard-note">You can change these later by clearing browser data.</div>
+  </div>
+</div>
+
+<!-- Safety Loop Modal -->
+<div class="safety-overlay" id="safetyOverlay">
+  <div class="safety-card">
+    <div class="safety-icon">🛡️</div>
+    <div class="safety-title">Are You Safe?</div>
+    <div class="safety-sub">A high-risk alert is active in your area. Please confirm your status.</div>
+    <div class="safety-countdown" id="safetyCountdown">15:00</div>
+    <button class="safety-yes" onclick="confirmSafe()">✓ I Am Safe</button>
+    <button class="safety-no" onclick="sendDistressFromSafety()">📡 Send Distress Signal</button>
+  </div>
+</div>
+
+<!-- Action Steps Modal -->
+<div class="action-modal" id="actionModal">
+  <div class="action-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">Alert Details</div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="steps-list" id="modalSteps"></div>
+    <button class="close-modal" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<!-- PHONE -->
+<div class="phone-shell">
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="time" id="clockTime">09:41</span>
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;">
+      <span class="conn-dot" id="connDot"></span>
+      <span id="connStatus">Connecting...</span>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="logo">ResQ<span>DISASTER INTELLIGENCE</span></div>
+    <div class="header-right">
+      <select class="lang-select" id="langSelect" onchange="onLangChange()">
+        <option value="en">EN</option>
+        <option value="hi">हिंदी</option>
+        <option value="ta">தமிழ்</option>
+        <option value="te">తెలుగు</option>
+        <option value="mr">मराठी</option>
+      </select>
+      <div class="notif-btn">🔔<div class="notif-dot" id="notifDot" style="display:none;"></div></div>
+    </div>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div class="scroll-area">
+
+    <!-- PAGES -->
+    <div id="pageHome">
+
+    <!-- UDRI CARD -->
+    <div class="udri-card">
+      <div class="udri-top">
+        <div>
+          <div class="udri-label">Universal Disaster Risk Index</div>
+          <div class="udri-location">
+            <div class="loc-dot" id="locDot"></div>
+            <span id="locationLabel">Detecting location...</span>
+          </div>
+        </div>
+        <div class="udri-badge LOW" id="riskBadge">⚠ LOW RISK</div>
+      </div>
+      <div class="udri-gauge-container">
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 120 70">
+            <defs>
+              <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <!-- green for low, yellow for moderate, orange->red for high/critical -->
+                <stop offset="0%" style="stop-color:#00E87A"/>
+                <stop offset="40%" style="stop-color:#FFD100"/>
+                <stop offset="60%" style="stop-color:#FF6B00"/>
+                <stop offset="100%" style="stop-color:#FF2233"/>
+              </linearGradient>
+            </defs>
+            <path class="gauge-track" d="M 14 65 A 46 46 0 0 1 106 65"/>
+            <path class="gauge-fill" id="gaugeFill" d="M 14 65 A 46 46 0 0 1 106 65" style="stroke-dashoffset:144.5;"/>
+          </svg>
+          <div class="gauge-value" id="gaugeValue" style="color:var(--green);">LOW</div>
+        </div>
+        <div class="udri-details">
+          <div class="udri-score-label" id="threatLabel">LOADING...</div>
+          <div class="udri-desc" id="udriDesc">No active threats detected.</div>
+          <div class="udri-disasters" id="threatTags"></div>
+        </div>
+      </div>
+      <div class="timeline-bar" id="timelineBar" style="display:none;">
+        <div class="timeline-icon">⏱</div>
+        <div class="timeline-text">
+          <div class="timeline-main">Critical impact in <span id="timelineVal">—</span></div>
+          <div class="timeline-sub" id="timelineSub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERIFICATION STRIP -->
+    <div class="verif-strip MONITORING" id="verifStrip" style="display:none;">
+      <span>✓</span>
+      <span class="verif-text" id="verifText">Loading verification...</span>
+      <span class="verif-score" id="verifScore">—</span>
+    </div>
+
+    <!-- ACTIVE ALERTS -->
+    <div class="section-header">
+      <span class="section-title">ACTIVE ALERTS</span>
+      <span class="section-action" onclick="loadData()">Refresh</span>
+    </div>
+    <div class="alerts-scroll" id="alertsContainer">
+      <!-- Skeleton loaders -->
+      <div style="height:80px;border-radius:18px;" class="skeleton"></div>
+      <div style="height:80px;border-radius:18px;" class="skeleton"></div>
+    </div>
+
+    <!-- RISK BREAKDOWN -->
+    <div class="section-header">
+      <span class="section-title">RISK BREAKDOWN</span>
+    </div>
+    <div class="risk-panel" id="riskPanel">
+      <div class="risk-panel-title" id="riskTitle">Loading...</div>
+      <div class="risk-bars" id="riskBars">
+        <div style="height:16px;border-radius:4px;" class="skeleton"></div>
+        <div style="height:16px;border-radius:4px;" class="skeleton"></div>
+        <div style="height:16px;border-radius:4px;" class="skeleton"></div>
+        <div style="height:16px;border-radius:4px;" class="skeleton"></div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="section-header"><span class="section-title">QUICK ACTIONS</span></div>
+    <div class="quick-actions">
+      <div class="qa-btn" onclick="openShelters()">
+        <div class="qa-icon">🏠</div>
+        <div class="qa-label">Shelters Nearby</div>
+        <div class="qa-sub" id="shelterCount">Loading...</div>
+      </div>
+      <div class="qa-btn" onclick="openSurvivalGuide()">
+        <div class="qa-icon">📋</div>
+        <div class="qa-label">Survival Guide</div>
+        <div class="qa-sub">Works offline</div>
+      </div>
+      <div class="qa-btn" onclick="openEmergencyContacts()">
+        <div class="qa-icon">📞</div>
+        <div class="qa-label">Emergency Contacts</div>
+        <div class="qa-sub">NDRF · Police · Amb.</div>
+      </div>
+      <div class="qa-btn" onclick="triggerSafetyCheck()">
+        <div class="qa-icon">🛡️</div>
+        <div class="qa-label">Safety Check</div>
+        <div class="qa-sub">Are You Safe?</div>
+      </div>
+    </div>
+
+    <!-- DISTRESS BUTTON -->
+    <div class="distress-section">
+      <button class="distress-btn" onclick="triggerDistress()">
+        <div class="distress-left">
+          <div class="distress-sos">SOS</div>
+          <div class="distress-text">
+            <div class="dt">Send Distress Signal</div>
+            <div class="ds" id="distressDesc">GPS + Location → Emergency Contact</div>
+          </div>
+        </div>
+        <div class="distress-pulse">📡</div>
+      </button>
+    </div>
+
+    </div><!-- end pageHome -->
+
+    <div id="pageAlerts" style="display:none;padding-bottom:24px;">
+      <div class="section-header">
+        <span class="section-title">ALERTS AROUND YOU</span>
+        <span class="section-action" onclick="loadData()">Refresh</span>
+      </div>
+      <div class="alerts-scroll" id="alertsPageContainer"></div>
+    </div>
+
+    <div id="pageProfile" style="display:none;padding:0 16px 24px;">
+      <div class="section-header" style="padding-left:8px;padding-right:8px;">
+        <span class="section-title">PROFILE</span>
+        <span class="section-action" onclick="editProfile()">Edit</span>
+      </div>
+      <div class="risk-panel">
+        <div class="risk-panel-title" id="profileName">—</div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8;">
+          <div><span style="color:var(--text);">Your phone:</span> <span id="profilePhone">—</span></div>
+          <div><span style="color:var(--text);">Emergency phone:</span> <span id="profileEmPhone">—</span></div>
+          <div><span style="color:var(--text);">Emergency email:</span> <span id="profileEmEmail">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pageChat" style="display:none;padding:0 16px 24px;">
+      <div class="section-header" style="padding-left:8px;padding-right:8px;margin-bottom:12px;">
+        <span class="section-title">CHAT ASSISTANT</span>
+      </div>
+      <div style="display:flex;flex-direction:column;height:calc(100vh - 280px);gap:12px;">
+        <div id="chatMessages" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:8px;background:var(--surface2);border-radius:12px;border:1px solid var(--border);">
+          <div style="color:var(--muted);font-size:12px;text-align:center;padding:16px;align-self:center;">💬 Ask me anything about disaster safety, preparedness, or survival. I'll help you think through your situation.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;gap:8px;">
+            <select id="chatDisaster" style="flex:1;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:'Space Mono',monospace;">
+              <option value="general">Disaster type (optional)</option>
+              <option value="flood">Flood</option>
+              <option value="cyclone">Cyclone</option>
+              <option value="earthquake">Earthquake</option>
+              <option value="heatwave">Heatwave</option>
+              <option value="wildfire">Wildfire</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <input id="chatMessage" type="text" placeholder="What would you like to know or discuss?" style="flex:1;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:'Space Mono',monospace;" onkeypress="if(event.key==='Enter') sendChat()" />
+            <button id="chatSend" style="padding:8px 14px;background:linear-gradient(135deg,#FF2233,#FF6B00);border:none;border-radius:6px;color:white;font-weight:600;cursor:pointer;font-size:12px;font-family:'Space Mono',monospace;" onclick="sendChat()">↳</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end scroll-area -->
+
+  <!-- BOTTOM NAV (MAP & ASSIST temporarily hidden) -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="navHome" onclick="showPage('home')"><span class="nav-icon">🏠</span><span class="nav-label">HOME</span></div>
+    <div class="nav-item" id="navAlerts" onclick="showPage('alerts')"><span class="nav-icon">⚠️</span><span class="nav-label">ALERTS</span></div>
+    <div class="nav-item" id="navChat" onclick="showPage('chat')"><span class="nav-icon">💬</span><span class="nav-label">CHAT</span></div>
+    <div class="nav-item" id="navProfile" onclick="showPage('profile')"><span class="nav-icon">👤</span><span class="nav-label">PROFILE</span></div>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────────────────
+// ResQ Frontend Logic — connects to FastAPI backend
+// ────────────────────────────────────────────────────────────
+
+let API_BASE = 'http://localhost:8000';
+let currentAlerts = [];
+let userLat = 0, userLon = 0;
+let selectedLang = 'en';
+let safetyTimer = null;
+let safetySecondsLeft = 900; // 15 min
+let safetyInterval = null;   // periodic safety checks during high risk
+let userProfile = null;      // { name, phone, emergencyPhone, emergencyEmail }
+
+const DISASTER_ICONS = {
+  FLOOD: '🌊', CYCLONE: '🌀', EARTHQUAKE: '🌍',
+  WILDFIRE: '🔥', HEATWAVE: '☀️', LANDSLIDE: '⛰️',
+  COLDWAVE: '❄️', UNKNOWN: '⚠️'
+};
+
+// ── Clock ────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clockTime').textContent =
+    now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Connection status ────────────────────────────────────────
+function setConnected(ok) {
+  const dot = document.getElementById('connDot');
+  const txt = document.getElementById('connStatus');
+  dot.className = 'conn-dot ' + (ok ? 'online' : 'offline');
+  txt.textContent = ok ? 'Live' : 'Offline';
+}
+
+// ── Onboarding / Profile ───────────────────────────────────────
+function loadProfile() {
+  try {
+    const raw = localStorage.getItem('resq_profile');
+    userProfile = raw ? JSON.parse(raw) : null;
+  } catch {
+    userProfile = null;
+  }
+  if (!userProfile) {
+    document.getElementById('onboardOverlay').className = 'onboard-overlay open';
+  }
+}
+
+function submitOnboarding() {
+  const name = document.getElementById('on_name').value.trim();
+  const phone = document.getElementById('on_phone').value.trim();
+  const emPhone = document.getElementById('on_em_phone').value.trim();
+  const emEmail = document.getElementById('on_em_email').value.trim();
+
+  if (!name || !phone || !emPhone) {
+    showToast('Please fill your name, phone, and emergency contact phone.');
+    return;
+  }
+
+  userProfile = {
+    name,
+    phone,
+    emergencyPhone: emPhone,
+    emergencyEmail: emEmail,
+  };
+  localStorage.setItem('resq_profile', JSON.stringify(userProfile));
+  document.getElementById('onboardOverlay').className = 'onboard-overlay';
+  showToast('Profile saved.');
+  // If user was on profile page, refresh it
+  try { renderProfile(); } catch {}
+}
+
+// ── GPS ──────────────────────────────────────────────────────
+function getGPS() {
+  if (!navigator.geolocation) { return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userLat = pos.coords.latitude;
+      userLon = pos.coords.longitude;
+      document.getElementById('locDot').className = 'loc-dot active';
+      document.getElementById('locationLabel').textContent =
+        `${userLat.toFixed(4)}, ${userLon.toFixed(4)}`;
+      // Reload with correct coordinates once GPS resolves
+      loadData();
+    },
+    () => {
+      document.getElementById('locDot').className = 'loc-dot inactive';
+      document.getElementById('locationLabel').textContent = 'Location unavailable (enable GPS)';
+    }
+  );
+}
+
+// ── API Call helper ─────────────────────────────────────────
+async function api(path, opts = {}) {
+  API_BASE = document.getElementById('apiBase').value.replace(/\/$/, '');
+  const res = await fetch(API_BASE + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// ── Load all data ────────────────────────────────────────────
+async function loadData() {
+  try {
+    // 1. Fetch alerts
+    const alerts = await api(`/api/alerts/?lat=${userLat}&lon=${userLon}&language=${selectedLang}`);
+    currentAlerts = alerts;
+    setConnected(true);
+    renderAlerts(alerts);
+    renderUDRI(alerts);
+    renderVerification(alerts);
+    renderRiskBreakdown(alerts[0]);
+    document.getElementById('notifDot').style.display = alerts.length > 0 ? 'block' : 'none';
+
+    // 3. Auto safety checks every 15 minutes during high risk alerts
+    updateSafetyAuto(alerts);
+
+    // 2. Fetch shelters
+    try {
+      const shelters = await api(`/api/shelter/nearest?lat=${userLat}&lon=${userLon}&limit=3`);
+      const open = shelters.filter(s => s.is_open);
+      document.getElementById('shelterCount').textContent =
+        `${open.length} open within ${(open[0]?.distance_km * 1.5 || 3).toFixed(0)}km`;
+    } catch {}
+
+  } catch (err) {
+    setConnected(false);
+    showToast('⚠ Backend offline — showing cached data');
+    renderOfflineDemo();
+  }
+}
+
+// ── Render UDRI gauge ────────────────────────────────────────
+function renderUDRI(alerts) {
+  if (!alerts || alerts.length === 0) {
+    // When there are no alerts show low risk state
+    document.getElementById('gaugeValue').textContent = 'LOW';
+    document.getElementById('gaugeValue').style.color = 'var(--green)';
+    document.getElementById('gaugeFill').style.strokeDashoffset = 144.5; // empty
+    document.getElementById('riskBadge').textContent = `⚠ LOW RISK`;
+    document.getElementById('riskBadge').className = 'udri-badge LOW';
+    document.getElementById('threatLabel').textContent = '';
+    document.getElementById('udriDesc').textContent = 'No active threats detected.';
+    return;
+  }
+  const top = alerts[0];
+  const score = Math.round(top.risk_score);
+
+  // Gauge: dashoffset = 144.5 - (144.5 * score/100)
+  const offset = 144.5 - (144.5 * score / 100);
+  document.getElementById('gaugeFill').style.strokeDashoffset = offset;
+  // show risk level text inside gauge
+  document.getElementById('gaugeValue').textContent = top.risk_level;
+  const colourMap = { LOW: 'var(--green)', MODERATE: 'var(--yellow)', HIGH: 'var(--red)', CRITICAL: 'var(--red)' };
+  document.getElementById('gaugeValue').style.color = colourMap[top.risk_level] || 'var(--red)';
+
+  document.getElementById('riskBadge').textContent = `⚠ ${top.risk_level} RISK`;
+  document.getElementById('riskBadge').className = `udri-badge ${top.risk_level}`;
+
+  document.getElementById('threatLabel').textContent =
+    `${alerts.length} ACTIVE THREAT${alerts.length > 1 ? 'S' : ''}`;
+  document.getElementById('udriDesc').textContent =
+    top.summary || 'Multiple disaster risks detected in your region.';
+
+  // Threat tags
+  const tagContainer = document.getElementById('threatTags');
+  tagContainer.innerHTML = '';
+  const seen = new Set();
+  alerts.forEach(a => {
+    if (!seen.has(a.disaster_type)) {
+      seen.add(a.disaster_type);
+      const tag = document.createElement('span');
+      tag.className = `dis-tag ${a.disaster_type}`;
+      tag.textContent = a.disaster_type;
+      tagContainer.appendChild(tag);
+    }
+  });
+
+  // Timeline
+  if (top.timeline_hours !== null && top.timeline_hours !== undefined) {
+    const h = Math.floor(top.timeline_hours);
+    const m = Math.round((top.timeline_hours - h) * 60);
+    document.getElementById('timelineVal').textContent = `~${h}h ${m}m`;
+    document.getElementById('timelineSub').textContent =
+      `${top.disaster_type} · ${top.region || top.location}`.toUpperCase();
+    document.getElementById('timelineBar').style.display = 'flex';
+  }
+}
+
+// ── Render verification strip ────────────────────────────────
+function renderVerification(alerts) {
+  if (!alerts || alerts.length === 0) return;
+  const top = alerts[0];
+  const strip = document.getElementById('verifStrip');
+  const status = top.verification_status;
+  strip.className = `verif-strip ${status}`;
+  strip.style.display = 'flex';
+
+  const layers = top.verification_layers || {};
+  const label =
+    status === 'VERIFIED'
+      ? '✓ VERIFIED'
+      : status === 'MONITORING'
+      ? '◉ MONITORING'
+      : '✗ RUMOR';
+  document.getElementById('verifText').textContent =
+    `${label} · ${top.source_count || 0} sources`;
+  document.getElementById('verifScore').textContent = status;
+}
+
+// ── Render alerts list ───────────────────────────────────────
+function renderAlerts(alerts) {
+  const container = document.getElementById('alertsContainer');
+  if (!alerts || alerts.length === 0) {
+    const msg = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">No alerts detected</div>';
+    container.innerHTML = msg;
+    const pageContainer = document.getElementById('alertsPageContainer');
+    if (pageContainer) pageContainer.innerHTML = msg;
+    return;
+  }
+  container.innerHTML = alerts.map(a => `
+    <div class="alert-card ${a.risk_level}" onclick="openAlertDetail('${a.id}')">
+      <div class="alert-icon-wrap ${a.disaster_type}">${DISASTER_ICONS[a.disaster_type] || '⚠️'}</div>
+      <div class="alert-body">
+        <div class="alert-top-row">
+          <span class="alert-type">${formatDisasterType(a.disaster_type)}</span>
+          <span class="alert-score ${a.risk_level}">${a.risk_level}</span>
+        </div>
+        <div class="alert-region">📍 ${a.region || a.location}</div>
+        <div class="alert-meta">
+          <span class="verified-badge ${a.verification_status}">${a.verification_status === 'VERIFIED' ? '✓' : '◉'} ${a.verification_status}</span>
+          <span class="alert-time">Updated just now</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Alerts page uses same cards
+  const pageContainer = document.getElementById('alertsPageContainer');
+  if (pageContainer) {
+    pageContainer.innerHTML = container.innerHTML;
+  }
+}
+
+function showPage(which) {
+  const home = document.getElementById('pageHome');
+  const alerts = document.getElementById('pageAlerts');
+  const chat = document.getElementById('pageChat');
+  const profile = document.getElementById('pageProfile');
+
+  home.style.display = which === 'home' ? 'block' : 'none';
+  alerts.style.display = which === 'alerts' ? 'block' : 'none';
+  chat.style.display = which === 'chat' ? 'block' : 'none';
+  profile.style.display = which === 'profile' ? 'block' : 'none';
+
+  document.getElementById('navHome').className = 'nav-item' + (which === 'home' ? ' active' : '');
+  document.getElementById('navAlerts').className = 'nav-item' + (which === 'alerts' ? ' active' : '');
+  document.getElementById('navChat').className = 'nav-item' + (which === 'chat' ? ' active' : '');
+  document.getElementById('navProfile').className = 'nav-item' + (which === 'profile' ? ' active' : '');
+
+  if (which === 'profile') renderProfile();
+}
+
+function renderProfile() {
+  loadProfile();
+  if (!userProfile) return;
+  document.getElementById('profileName').textContent = userProfile.name || 'ResQ User';
+  document.getElementById('profilePhone').textContent = userProfile.phone || '—';
+  document.getElementById('profileEmPhone').textContent = userProfile.emergencyPhone || '—';
+  document.getElementById('profileEmEmail').textContent = userProfile.emergencyEmail || '—';
+}
+
+function editProfile() {
+  // reopen onboarding overlay with existing values
+  loadProfile();
+  if (userProfile) {
+    document.getElementById('on_name').value = userProfile.name || '';
+    document.getElementById('on_phone').value = userProfile.phone || '';
+    document.getElementById('on_em_phone').value = userProfile.emergencyPhone || '';
+    document.getElementById('on_em_email').value = userProfile.emergencyEmail || '';
+  }
+  document.getElementById('onboardOverlay').className = 'onboard-overlay open';
+}
+
+// ── Render risk breakdown bars ───────────────────────────────
+function renderRiskBreakdown(alert) {
+  const titleEl = document.getElementById('riskTitle');
+  const barsEl = document.getElementById('riskBars');
+  if (!alert) {
+    // no alert means clear and show friendly message instead of loading
+    titleEl.textContent = 'No disaster risks';
+    barsEl.innerHTML = '<div style="text-align:center;color:var(--muted);padding:10px;font-size:13px;">No active threats</div>';
+    return;
+  }
+  const layers = alert.verification_layers || { source_agreement: 60, official_confirmation: 70, nlp_credibility: 0.5, data_consistency: 50 };
+
+  titleEl.textContent = `${formatDisasterType(alert.disaster_type)} Risk Factors`;
+  barsEl.innerHTML = [
+    ['WEATHER', Math.min(layers.data_consistency || 60, 100), '#FF2233'],
+    ['SOURCES', layers.source_agreement || 60, '#FF6B00'],
+    ['NLP ESCALATION', Math.round((alert.escalation_score || 5) * 10), '#FFD100'],
+    ['VERIFICATION', layers.official_confirmation || 50, '#00E87A'],
+  ].map(([label, val, color]) => `
+    <div class="risk-row">
+      <span class="risk-row-label">${label}</span>
+      <div class="risk-bar-track"><div class="risk-bar-fill" style="width:${val}%;background:linear-gradient(90deg,${color}99,${color});"></div></div>
+      <span class="risk-row-val">${Math.round(val)}</span>
+    </div>
+  `).join('');
+}
+
+// ── Alert detail modal ───────────────────────────────────────
+async function openAlertDetail(alertId) {
+  const alert = currentAlerts.find(a => a.id === alertId);
+  if (!alert) return;
+
+  document.getElementById('modalTitle').textContent =
+    `${DISASTER_ICONS[alert.disaster_type]} ${formatDisasterType(alert.disaster_type)} ${alert.risk_level}`;
+  document.getElementById('modalSub').textContent =
+    `${alert.location} · ${alert.risk_level} risk · ${alert.verification_status}`;
+
+  // Get action steps (may require backend call)
+  let steps = alert.action_steps || [];
+  if (steps.length === 0) {
+    try {
+      const detail = await api(`/api/alerts/${alertId}?language=${selectedLang}`);
+      steps = detail.action_steps || [];
+      alert.action_steps = steps;
+    } catch {}
+  }
+
+  // Fallback to offline survival guide
+  if (steps.length === 0) {
+    steps = getOfflineSteps(alert.disaster_type, alert.risk_level);
+  }
+
+  document.getElementById('modalSteps').innerHTML = steps.map((s, i) => `
+    <div class="step-item">
+      <div class="step-num">${i + 1}</div>
+      <div class="step-text">${s}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('actionModal').className = 'action-modal open';
+}
+
+function closeModal() {
+  document.getElementById('actionModal').className = 'action-modal';
+}
+
+// ── Safety check / "Are You Safe?" loop ─────────────────────
+function triggerSafetyCheck() {
+  document.getElementById('safetyOverlay').className = 'safety-overlay open';
+  safetySecondsLeft = 900;
+  updateSafetyCountdown();
+  safetyTimer = setInterval(() => {
+    safetySecondsLeft--;
+    updateSafetyCountdown();
+    if (safetySecondsLeft <= 0) {
+      clearInterval(safetyTimer);
+      closeSafetyOverlay();
+      // Auto-trigger distress if no response
+      triggerDistress(true);
+    }
+  }, 1000);
+}
+
+function updateSafetyCountdown() {
+  const m = Math.floor(safetySecondsLeft / 60).toString().padStart(2, '0');
+  const s = (safetySecondsLeft % 60).toString().padStart(2, '0');
+  document.getElementById('safetyCountdown').textContent = `${m}:${s}`;
+}
+
+function confirmSafe() {
+  clearInterval(safetyTimer);
+  closeSafetyOverlay();
+  showToast('✓ Confirmed safe. Stay alert!');
+}
+
+function closeSafetyOverlay() {
+  document.getElementById('safetyOverlay').className = 'safety-overlay';
+}
+
+function sendDistressFromSafety() {
+  clearInterval(safetyTimer);
+  closeSafetyOverlay();
+  triggerDistress();
+}
+
+// Periodic safety prompts while high risk/UDRI high
+function updateSafetyAuto(alerts) {
+  const top = alerts && alerts[0];
+  const highRisk = top && (top.risk_level === 'HIGH' || top.risk_level === 'CRITICAL');
+
+  if (highRisk) {
+    if (!safetyInterval) {
+      safetyInterval = setInterval(() => {
+        triggerSafetyCheck();
+      }, 15 * 60 * 1000); // every 15 minutes
+    }
+  } else if (safetyInterval) {
+    clearInterval(safetyInterval);
+    safetyInterval = null;
+  }
+}
+
+// ── Distress button ──────────────────────────────────────────
+async function triggerDistress(auto = false) {
+  const bat = navigator.getBattery ? (await navigator.getBattery()).level * 100 : 80;
+  const top = currentAlerts[0];
+  if (!userProfile) {
+    loadProfile();
+    showToast('Please complete your profile so we can contact your emergency number.');
+    return;
+  }
+
+  const payload = {
+    latitude: userLat,
+    longitude: userLon,
+    timestamp: new Date().toISOString(),
+    battery_percent: Math.round(bat),
+    disaster_type: top?.disaster_type || null,
+    user_name: userProfile.name || 'ResQ User',
+    emergency_contact_phone: userProfile.emergencyPhone,
+    emergency_contact_email: userProfile.emergencyEmail || 'emergency@example.com',
+    language: selectedLang,
+  };
+
+  try {
+    const res = await api('/api/distress/sos', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    showToast('📡 Distress signal sent!');
+    // Also save offline SMS text
+    localStorage.setItem('resq_offline_sms', res.offline_sms || '');
+  } catch {
+    // Offline fallback: would trigger SMS directly on native app
+    showToast('📴 Offline — SMS fallback ready');
+    const smsText = `RESQ EMERGENCY: Sending distress from ${userLat.toFixed(4)},${userLon.toFixed(4)}. Call 112.`;
+    if (navigator.share) {
+      navigator.share({ title: 'ResQ Distress', text: smsText });
+    }
+  }
+}
+
+// ── Quick action buttons ─────────────────────────────────────
+async function openShelters() {
+  try {
+    const shelters = await api(`/api/shelter/nearest?lat=${userLat}&lon=${userLon}`);
+    const steps = shelters.map(s => {
+      // make address clickable to Google Maps
+      const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`;
+      return `${s.name} — <a href="${mapUrl}" target="_blank" style="color:var(--red);text-decoration:underline;">${s.address}</a> (${s.distance_km}km) · ${s.contact || '112'}`;
+    });
+    showModal('🏠 Nearest Shelters', `${shelters.length} open shelters found`, steps);
+  } catch {
+    showModal('🏠 Shelters', 'Offline — cached list', [
+      'Nehru Indoor Stadium, Chennai · 044-25384500',
+      'Velachery Bus Terminus Shelter · 044-22200200',
+      'Adyar Government School · 112',
+    ]);
+  }
+}
+
+function openSurvivalGuide() {
+  // show options inside the same action modal
+  const options = ['FLOOD','CYCLONE','EARTHQUAKE','HEATWAVE','WILDFIRE','LANDSLIDE','COLDWAVE'];
+  const content = options.map((opt,i) => `
+      <div class="step-item" onclick="chooseGuide('${opt}')">
+        <div class="step-num">${i+1}</div>
+        <div class="step-text">${opt}</div>
+      </div>
+    `).join('');
+  document.getElementById('modalTitle').textContent = '📋 Survival Guide';
+  document.getElementById('modalSub').textContent = 'Tap a disaster to view its guide';
+  document.getElementById('modalSteps').innerHTML = content;
+  document.getElementById('actionModal').className = 'action-modal open';
+}
+
+function chooseGuide(type) {
+  const level = 'HIGH';
+  const steps = getOfflineSteps(type, level);
+  showModal(`📋 ${type} Survival Guide`, `${level} risk level · Works offline`, steps);
+}
+
+function openEmergencyContacts() {
+  showModal('📞 Emergency Contacts', 'India — National Numbers', [
+    '112 — National Emergency',
+    '1078 — NDMA Helpline',
+    '108 — Ambulance',
+    '101 — Fire Brigade',
+    '100 — Police',
+    '011-24363260 — NDRF',
+  ]);
+}
+
+function showModal(title, sub, steps) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSub').textContent = sub;
+  document.getElementById('modalSteps').innerHTML = steps.map((s, i) => `
+    <div class="step-item">
+      <div class="step-num">${i + 1}</div>
+      <div class="step-text">${s}</div>
+    </div>
+  `).join('');
+  document.getElementById('actionModal').className = 'action-modal open';
+}
+
+// ── Language change ──────────────────────────────────────────
+function onLangChange() {
+  selectedLang = document.getElementById('langSelect').value;
+  loadData();
+}
+
+// ── Offline survival guide (cached JSON) ─────────────────────
+const OFFLINE_GUIDE = {
+  FLOOD: {
+    HIGH: ["Move to higher ground immediately", "Do not wade through floodwater", "Call 112 for evacuation", "Turn off electricity at mains", "Take emergency kit and documents"],
+    CRITICAL: ["EVACUATE NOW — do not wait", "Call 112 immediately", "Move to nearest shelter", "Do not use lifts", "Signal for help from roof if trapped"],
+    MODERATE: ["Move valuables to higher floors", "Fill clean water containers now", "Disconnect electrical appliances", "Stay tuned to official alerts", "Prepare to evacuate within hours"],
+    LOW: ["Monitor water levels regularly", "Prepare emergency kit", "Know your evacuation route", "Secure valuable documents", "Check on elderly neighbours"],
+  },
+  CYCLONE: {
+    HIGH: ["Move to cyclone shelter NOW", "Stay away from windows and doors", "Do not go outside during the storm", "Keep emergency contacts accessible", "If outdoors, lie flat in a ditch"],
+    CRITICAL: ["SHELTER IMMEDIATELY", "Do not venture out during eye passage", "Stay in innermost room", "Call 112 if trapped", "Hold onto a sturdy object"],
+    MODERATE: ["Move to pucca building or cyclone shelter", "Tape window glass", "Fill bathtubs with water", "Stay away from coastal areas", "Listen to All India Radio"],
+    LOW: ["Monitor cyclone track on IMD", "Secure loose outdoor items", "Stock 3-day food and water", "Charge all devices", "Identify nearest cyclone shelter"],
+  },
+  EARTHQUAKE: {
+    HIGH: ["DROP under sturdy table — COVER head — HOLD ON", "Stay away from exterior walls", "After shaking stops, evacuate carefully", "Watch for falling debris", "Expect aftershocks"],
+    CRITICAL: ["DROP COVER HOLD ON NOW", "After shaking stops — evacuate immediately", "Do not re-enter damaged buildings", "Call 112 — report injuries", "Expect aftershocks"],
+    MODERATE: ["Drop, Cover, Hold On if shaking starts", "Move away from windows", "Do not use elevators", "Be prepared for aftershocks", "If outdoors, move away from buildings"],
+    LOW: ["Secure heavy furniture to walls", "Keep emergency kit ready", "Know your building's exits", "Identify open spaces nearby", "Check for gas leaks"],
+  },
+  DEFAULT: {
+    HIGH: ["Follow official government instructions", "Stay indoors if safe", "Call 112 for emergency assistance", "Keep emergency kit ready", "Monitor official alerts"],
+    CRITICAL: ["EVACUATE if instructed", "Call 112 immediately", "Move to nearest shelter", "Inform emergency contact of your location", "Follow government orders"],
+    MODERATE: ["Stay alert", "Prepare emergency kit", "Monitor news", "Know evacuation routes", "Keep documents ready"],
+    LOW: ["Monitor situation", "Prepare emergency kit", "Know your nearest shelter", "Stay informed", "Check on neighbours"],
+  }
+};
+
+function getOfflineSteps(disasterType, riskLevel) {
+  const guide = OFFLINE_GUIDE[disasterType] || OFFLINE_GUIDE.DEFAULT;
+  return guide[riskLevel] || guide.HIGH;
+}
+
+// ── Offline demo data ────────────────────────────────────────
+function renderOfflineDemo() {
+  const demoAlerts = [
+    {
+      id: 'demo-flood-001', disaster_type: 'FLOOD', location: 'Chennai, Tamil Nadu',
+      region: 'Adyar, Velachery, T.Nagar', risk_score: 72, risk_level: 'HIGH',
+      verification_status: 'VERIFIED', confidence_score: 87, escalation_score: 7.2,
+      timeline_hours: 4.3, source_count: 7,
+      summary: 'Heavy rainfall has caused Adyar river to rise rapidly. IMD orange alert issued.',
+      verification_layers: { source_agreement: 80, official_confirmation: 90, nlp_credibility: 0.88, data_consistency: 85 },
+      action_steps: []
+    },
+    {
+      id: 'demo-cyclone-001', disaster_type: 'CYCLONE', location: 'Bay of Bengal',
+      region: 'Bay of Bengal, 280km offshore', risk_score: 54, risk_level: 'MODERATE',
+      verification_status: 'MONITORING', confidence_score: 65, escalation_score: 5.4,
+      timeline_hours: 14, source_count: 4,
+      summary: 'Cyclonic system forming in Bay of Bengal. IMD monitoring.',
+      verification_layers: { source_agreement: 60, official_confirmation: 70, nlp_credibility: 0.72, data_consistency: 65 },
+      action_steps: []
+    },
+  ];
+  currentAlerts = demoAlerts;
+  renderAlerts(demoAlerts);
+  renderUDRI(demoAlerts);
+  renderVerification(demoAlerts);
+  renderRiskBreakdown(demoAlerts[0]);
+  document.getElementById('shelterCount').textContent = '3 open within 2km';
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show';
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function formatDisasterType(type) {
+  return type.charAt(0) + type.slice(1).toLowerCase().replace('wave','wave');
+}
+
+// ── Chat functions ───────────────────────────────────────────
+let chatHistory = [];
+
+async function sendChat() {
+  const disaster = document.getElementById('chatDisaster').value || 'general';
+  const message = document.getElementById('chatMessage').value.trim();
+
+  if (!message) {
+    showToast('⚠ Type your question or concern');
+    return;
+  }
+
+  // Add user message to UI and history
+  appendChatBubble('user', message);
+  chatHistory.push({ role: 'user', content: message });
+  document.getElementById('chatMessage').value = '';
+  document.getElementById('chatSend').disabled = true;
+
+  // Show loading indicator
+  appendChatBubble('assistant', '⏳ Thinking...');
+
+  try {
+    const res = await api('/api/chat', {
+      method: 'POST',
+      body: JSON.stringify({
+        location: `${userLat.toFixed(4)},${userLon.toFixed(4)}`,
+        disaster: disaster,
+        message: message,
+        history: chatHistory.slice(-10)  // Send last 10 messages for context
+      })
+    });
+    
+    // Remove loading message and add real response
+    const container = document.getElementById('chatMessages');
+    const lastBubble = container.querySelector('div:last-child');
+    if (lastBubble && lastBubble.textContent === '⏳ Thinking...') {
+      lastBubble.remove();
+    }
+    
+    appendChatBubble('assistant', res.reply);
+    chatHistory.push({ role: 'assistant', content: res.reply });
+  } catch (err) {
+    // Remove loading message
+    const container = document.getElementById('chatMessages');
+    const lastBubble = container.querySelector('div:last-child');
+    if (lastBubble && lastBubble.textContent === '⏳ Thinking...') {
+      lastBubble.remove();
+    }
+    
+    appendChatBubble('assistant', '⚠️ Connection error. Please try again.');
+  } finally {
+    document.getElementById('chatSend').disabled = false;
+  }
+}
+
+function appendChatBubble(role, text) {
+  const container = document.getElementById('chatMessages');
+  
+  // Remove initial placeholder if it exists
+  const placeholder = container.querySelector('[style*="text-align:center"]');
+  if (placeholder && placeholder.textContent.includes('Ask me')) {
+    placeholder.remove();
+  }
+  
+  const bubble = document.createElement('div');
+  bubble.style.cssText = `
+    align-self: ${role === 'user' ? 'flex-end' : 'flex-start'};
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    background: ${role === 'user' ? 'var(--red)' : 'var(--surface)'};
+    color: ${role === 'user' ? 'white' : 'var(--text)'};
+    border: ${role === 'user' ? 'none' : '1px solid var(--border)'};
+    animation: slideIn 0.3s ease;
+  `;
+  bubble.textContent = text;
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+// Add slide-in animation for chat bubbles
+if (!document.querySelector('style[data-chat]')) {
+  const style = document.createElement('style');
+  style.setAttribute('data-chat', 'true');
+  style.textContent = '@keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }';
+  document.head.appendChild(style);
+}
+
+// ── Init ─────────────────────────────────────────────────────
+loadProfile();
+getGPS();
+loadData();
+setInterval(loadData, 5 * 60 * 1000); // Refresh every 5 min
+</script>
+</body>
+</html>
